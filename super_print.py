@@ -1,122 +1,173 @@
-from abc import ABC, abstractmethod
-from collections import deque
-import itertools
-import math
 import typing
-
+from abc import ABC,abstractmethod
+from collections import deque
 
 class IPublic(ABC):
-    def sprint(self,rdd:typing.Any)->tuple:
-        """
-            rdd:typing.Any
-        """
-
-class IPrivate(ABC):
     @abstractmethod
-    def __super_print_int(self, rdd: int) -> tuple:
+    def only_one_level_print(self,rdd:typing.Any)->tuple:
         """
-            rdd:int
+            only_one_level_print function
+            args:
+                rdd:typing.Any
+            childrens:
+                int,float,bool,str,one_level_list,set,one_level_tuple
         """
 
     @abstractmethod
-    def __super_print_float(self,rdd:float)->tuple:
+    def some_level_print(self,rdd:typing.Any)->tuple:
         """
-            rdd:float
-        """
-
-    @abstractmethod
-    def __super_print_bool(self,rdd:bool)->tuple:
-        """
-            rdd:bool
+            some_level_print function
+            args:
+                rdd:typing.Any4
+            childrens:
+                some_level_list,some_level_tuple
         """
 
     @abstractmethod
-    def __super_print_list(self,rdd:list)->tuple:
+    def dict_print(self,rdd)->tuple:
         """
-            rdd:list
-        """
-
-    @abstractmethod
-    def __super_print_tuple(self,rdd:tuple)->tuple:
-        """
-            rdd:tuple
+            dict_print function
+            args:
+                rdd:dict
+            childrens:
+                dict
         """
 
     @abstractmethod
-    def __super_print_set(self,rdd:set)->tuple:
+    def sprint(self,rdd)->tuple:
         """
-            rdd:set
-        """
-
-    @abstractmethod
-    def __super_print_dict(self,rdd:dict)->tuple:
-        """
-            rdd:dict
-        """
-
-    @abstractmethod
-    def __super_print_str(self,rdd:str)->tuple:
-        """
-            rdd:str
-        """
-
-    @abstractmethod
-    def __judge_type(self,rdd:typing.Any,rdd_type:type)->tuple:
-        """
-            rdd:typing.Any
-            rdd_type:type
+            sprint function
+            args:
+                rdd:typing.Any
         """
 
 
-class Base(IPublic,IPrivate):
-    def __judge_type(self,rdd:typing.Any,rdd_type:type)->tuple:
+
+class Base_one(IPublic):
+    def only_one_level_print(self,rdd)->tuple:
         try:
-            if type(rdd)==rdd_type:
+            print(f"<- rdd:{type(rdd)} ->")
+            if type(rdd)==int or type(rdd)==float or type(rdd)==bool or type(rdd)==str:
+                print("\t",f"{rdd}")
+                return rdd,False
+            if type(rdd)==list:
+                print("\t"," ".join(str(cho) for cho in rdd))
+                return rdd,True
+            if type(rdd)==tuple:
+                print("\t"," ".join(str(cho) for cho in rdd))
+                return rdd,True
+            if type(rdd)==set:
+                print("\t"," ".join(str(cho) for cho in list(rdd)))
+                return rdd,True
+            return rdd,False
+        except Exception as e:
+            print(e)
+            return e,False
+
+    def some_level_print(self,rdd)->tuple:
+        try:
+            c=len(rdd)
+            if c==1:
+                return rdd,False
+            print(f"<- rdd:{type(rdd)} ->")
+            if type(rdd)==list or type(rdd)==tuple:
+                for x in range(c):
+                    print(" ".join(str(cho) for cho in rdd[x]))
                 return rdd,True
             else:
                 return rdd,False
         except Exception as e:
+            print(e)
             return e,False
 
-    def __super_print_int(self,rdd:int)->tuple:
-        rdd,ok=self.__judge_type(rdd,int)
-        if ok:
-            print(f"<- int: {rdd} ->")
-            return rdd,True
+    def __dict_print(self,childs_dict:dict)->tuple:
+        if type(childs_dict)!=dict:
+            print(childs_dict)
+            return childs_dict,True
+        key_list=list(childs_dict)
+        for key in key_list:
+            print(f"{key}:")
+            self.__dict_print(childs_dict[key])
+        return childs_dict,True
+
+    def dict_print(self,rdd)->tuple:
+        try:
+            print(f"<- rdd:{type(rdd)} ->")
+            _,ok=self.__dict_print(rdd)
+            if ok:
+                return rdd,True
+            else:
+                return rdd,False
+        except Exception as e:
+            print(e)
+            return e,False
+
+    def __get_depth_list(self,rdd)->int:
+        if isinstance(rdd,list):
+            return 1+max(self.__get_depth_list(item) for item in rdd)
         else:
-            return rdd,False
-
-    def __super_print_float(self,rdd:float)->tuple:
-        rdd,ok=self.__judge_type(rdd,float)
-        if ok:
-            print(f"<- float: {rdd} ->")
-            return rdd,True
+            return 0
+    def __get_depth_tuple(self,rdd)->int:
+        if isinstance(rdd,tuple):
+            return 1+max(self.__get_depth_tuple(item) for item in rdd)
         else:
-            return rdd,False
+            return 0
 
-    def __super_print_str(self,rdd:str)->tuple:
-        rdd,ok=self.__judge_type(rdd,str)
-        if ok:
-            print(f"<- str: {rdd} ->")
-            return rdd,True
-        else:
-            return rdd,False
+    def sprint(self,rdd)->tuple:
+        try:
+            if (type(rdd)==int) or (type(rdd)==set) or (type(rdd)==float) or (type(rdd)==bool) or (type(rdd)==str) or (type(rdd)==list and self.__get_depth_list(rdd)==1) or (type(rdd)==tuple and self.__get_depth_tuple(rdd)==1):
+                _,ok=self.only_one_level_print(rdd)
+                if ok:
+                    return rdd,True
+                else:
+                    return rdd,False
+            if type(rdd)==list or type(rdd)==tuple:
+                _,ok=self.some_level_print(rdd)
+                if ok:
+                    return rdd,True
+                else:
+                    return rdd,False
+            if type(rdd)==dict:
+                _,ok=self.dict_print(rdd)
+                if ok:
+                    return rdd,True
+                else:
+                    return rdd,False
+        except Exception as e:
+            return e,False
 
-    def __super_print_bool(self,rdd:bool)->tuple:
-        rdd,ok=self.__judge_type(rdd,bool)
-        if ok:
-            print(f"<- bool: {rdd} ->")
-            return rdd,True
-        else:
-            return rdd,False
+def test():
+    base=Base_one()
+    # 整数
+    base.sprint(12001)
+    print("---"*20)
+    # 浮点数
+    base.sprint(1.1)
+    print("---"*20)
+    # 布尔
+    base.sprint(True)
+    print("---"*20)
+    # 字符串
+    base.sprint("11-223")
+    print("---"*20)
+    # 列表
+    base.sprint([1,2,3])
+    print("---"*20)
+    base.sprint([[1],[2,3],[4,5,6]])
+    print("---"*20)
+    # 元组
+    base.sprint((1,2,3))
+    print("---"*20)
+    base.sprint(((1,1),(2,3),(4,5,6)))
+    print("---"*20)
+    # 集合
+    base.sprint({1,2,3})
+    print("---"*20)
+    # 字典
+    base.sprint({"name":["jom","kom","lom"],"age":[1,2,3],"address":{"ShangHai":1,"BeiJing":2}})
 
-    def __super_print_list(self,rdd:list)->tuple:
-        rdd,ok=self.__judge_type(rdd,list)
-        if ok
-
-def test() -> tuple:
-    return 1, True
-
-
-if __name__ == "__main__":
+if __name__=="__main__":
     test()
+
+
+
